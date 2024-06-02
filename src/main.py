@@ -3,6 +3,7 @@ import time
 from colorama import Fore, init
 from moviepy.editor import VideoFileClip
 
+from config import tts_text_filename, output_video_filename, output_audio_filename
 import funcs
 
 init(autoreset=True)
@@ -19,8 +20,8 @@ def main() -> None:
     is_audio_attached = False
     if do_generate_tts in ["yes", "y"]:
         try:
-            video = funcs.generate_tts(video, "context.txt")
-            print(f"Saved as {Fore.GREEN}output/tts.mp3")
+            video = funcs.generate_tts(video, tts_text_filename)
+            print(f"Saved as {Fore.GREEN}output/{output_audio_filename}")
             is_audio_attached = True
         except Exception as e:
             print(e)
@@ -32,17 +33,17 @@ def main() -> None:
     video = funcs.change_resolution(video) if do_change_res in ["yes", "y"] else video
 
     video.write_videofile(
-        filename="output/result.mp4",
+        filename=f"output/{output_video_filename}",
         fps=60,
         codec="libx264",
-        audio="output/tts.mp3" if is_audio_attached else False,
+        audio=f"output/{output_audio_filename}" if is_audio_attached else False,
         audio_codec="aac",
         temp_audiofile="temp-audio.m4a",
         remove_temp=True,
         verbose=False,
         logger=None,
     )
-    print(f"Saved as {Fore.GREEN}output/result.mp4")
+    print(f"Saved as {Fore.GREEN}output/{output_video_filename}")
     print(
         f"For subtitles you may visit {Fore.YELLOW}https://www.veed.io/use-cases/subtitles-transcription{Fore.RESET} website"
     )
