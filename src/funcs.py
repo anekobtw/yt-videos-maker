@@ -2,7 +2,8 @@ import moviepy.video.fx.all as vfx
 from colorama import Fore, init
 from gtts import gTTS
 from moviepy.editor import AudioFileClip, VideoFileClip
-from config import output_audio_filename, lang
+
+from config import lang, output_audio_filename
 
 init(autoreset=True)
 

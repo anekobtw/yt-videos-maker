@@ -3,8 +3,8 @@ import time
 from colorama import Fore, init
 from moviepy.editor import VideoFileClip
 
-from config import tts_text_filename, output_video_filename, output_audio_filename
 import funcs
+from config import output_audio_filename, output_video_filename, tts_text_filename
 
 init(autoreset=True)
 
