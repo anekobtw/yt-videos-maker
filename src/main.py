@@ -14,7 +14,7 @@ class App(customtkinter.CTk):
         # configure window
         self.title("YouTube videos maker")
         self.start_time = 0
-        self.end_time = 10
+        self.end_time = 1
 
         # create sidebar frame with widgets
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
@@ -29,8 +29,14 @@ class App(customtkinter.CTk):
         self.textbox = customtkinter.CTkTextbox(self.sidebar_frame)
         self.textbox.grid(row=1, column=0, padx=20, pady=(10, 0), sticky="nsew")
 
+        self.language_label = customtkinter.CTkLabel(self.sidebar_frame, text="Language:", anchor="w")
+        self.language_label.grid(row=3, column=0, padx=20, pady=(15, 0))
+
+        self.language_option_menu = customtkinter.CTkOptionMenu(self.sidebar_frame, values=["English", "Russian"])
+        self.language_option_menu.grid(row=4, column=0, padx=20, pady=(0, 5))
+
         self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
-        self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_label.grid(row=5, column=0, padx=20)
         self.appearance_mode_optionmenu = customtkinter.CTkOptionMenu(
             self.sidebar_frame, values=["Light", "Dark", "System"], command=self.change_appearance_mode_event
         )
@@ -90,7 +96,8 @@ class App(customtkinter.CTk):
         video = VideoFileClip(f"gameplays/{self.optionmenu_1.get()}")
 
         if self.checkbox_1.get() == 1:
-            gTTS(text=self.textbox.get("0.0", "end"), lang="en").save("output/tts.mp3")
+            language = "en" if self.language_option_menu.get() == "English" else "ru"
+            gTTS(text=self.textbox.get("0.0", "end"), lang=language).save("output/tts.mp3")
 
             audio_dur = AudioFileClip("output/tts.mp3").duration
             video_dur = VideoFileClip(f"gameplays/{self.optionmenu_1.get()}").duration
