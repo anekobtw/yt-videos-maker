@@ -1,3 +1,4 @@
-colorama==0.4.6
+CTkMessagebox==2.5
+customtkinter==5.2.2
 gTTS==2.2.3
 moviepy==1.0.3

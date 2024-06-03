@@ -1,54 +1,135 @@
-import time
+import os
 
-from colorama import Fore, init
-from moviepy.editor import VideoFileClip
-
-import funcs
-from config import output_audio_filename, output_video_filename, tts_text_filename
-
-init(autoreset=True)
+import customtkinter
+import moviepy.video.fx.all as vfx
+from CTkMessagebox import CTkMessagebox
+from gtts import gTTS
+from moviepy.editor import AudioFileClip, VideoFileClip
 
 
-def main() -> None:
-    print("Auto YTShorts Maker (c) anekobtw, 2024\n")
-    gp_filename = input('Enter the filename of a gameplay (in the "Gameplays" folder) > ')
-    do_generate_tts = input("Do you want to generate speech? (y/n) > ")
-    do_change_res = input("Do you want to change the resolution to 9:16? (y/n) > ")
-    video = VideoFileClip(f"Gameplays/{gp_filename}.mp4")
+class App(customtkinter.CTk):
+    def __init__(self):
+        super().__init__()
 
-    # TTS
-    is_audio_attached = False
-    if do_generate_tts in ["yes", "y"]:
-        try:
-            video = funcs.generate_tts(video, tts_text_filename)
-            print(f"Saved as {Fore.GREEN}output/{output_audio_filename}")
-            is_audio_attached = True
-        except Exception as e:
-            print(e)
-            video = video.subclip(2, int(input("Enter the video duration (in seconds) > ")) + 2)
-    else:
-        video = video.subclip(2, int(input("Enter the video duration (in seconds) > ")) + 2)
+        # configure window
+        self.title("YouTube videos maker")
+        self.start_time = 0
+        self.end_time = 10
 
-    # changing resolution
-    video = funcs.change_resolution(video) if do_change_res in ["yes", "y"] else video
+        # create sidebar frame with widgets
+        self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
+        self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
+        self.sidebar_frame.grid_rowconfigure(4, weight=1)
 
-    video.write_videofile(
-        filename=f"output/{output_video_filename}",
-        fps=60,
-        codec="libx264",
-        audio=f"output/{output_audio_filename}" if is_audio_attached else False,
-        audio_codec="aac",
-        temp_audiofile="temp-audio.m4a",
-        remove_temp=True,
-        verbose=False,
-        logger=None,
-    )
-    print(f"Saved as {Fore.GREEN}output/{output_video_filename}")
-    print(
-        f"For subtitles you may visit {Fore.YELLOW}https://www.veed.io/use-cases/subtitles-transcription{Fore.RESET} website"
-    )
-    time.sleep(3)
+        self.logo_label = customtkinter.CTkLabel(
+            self.sidebar_frame, text="YouTube videos maker v2.0.0", font=customtkinter.CTkFont(size=20, weight="bold")
+        )
+        self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
+
+        self.textbox = customtkinter.CTkTextbox(self.sidebar_frame)
+        self.textbox.grid(row=1, column=0, padx=20, pady=(10, 0), sticky="nsew")
+
+        self.appearance_mode_label = customtkinter.CTkLabel(self.sidebar_frame, text="Appearance Mode:", anchor="w")
+        self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_optionmenu = customtkinter.CTkOptionMenu(
+            self.sidebar_frame, values=["Light", "Dark", "System"], command=self.change_appearance_mode_event
+        )
+        self.appearance_mode_optionmenu.grid(row=6, column=0, padx=20, pady=(0, 10))
+
+        # create checkbox
+        self.checkbox_frame = customtkinter.CTkFrame(self)
+        self.checkbox_frame.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
+
+        self.optionmenu_1 = customtkinter.CTkOptionMenu(self.checkbox_frame, dynamic_resizing=False, values=os.listdir("gameplays"))
+        self.optionmenu_1.grid(row=0, column=0, pady=5, padx=(10, 0), sticky="nsew")
+        self.checkbox_1 = customtkinter.CTkCheckBox(self.checkbox_frame, text="Generate speech", command=self.update_config_button)
+        self.checkbox_1.grid(row=1, column=0, pady=5, padx=(10, 0), sticky="nsew")
+        self.checkbox_2 = customtkinter.CTkCheckBox(self.checkbox_frame, text="9:16")
+        self.checkbox_2.grid(row=2, column=0, pady=5, padx=(10, 0), sticky="nsew")
+
+        # create entries
+        self.cutting_frame = customtkinter.CTkFrame(self)
+        self.cutting_frame.grid(row=1, column=1, padx=20, pady=20)
+        self.cutting_label = customtkinter.CTkLabel(self.cutting_frame, text="Cutting video\n(if you don't generate speech)")
+        self.cutting_label.grid(row=0, column=0, pady=(5, 10))
+        self.dialog_window = customtkinter.CTkButton(self.cutting_frame, text="Configure", command=self.open_input_dialog_event)
+        self.dialog_window.grid(row=1, column=0, padx=20, pady=(0, 10))
+
+        # create main button
+        self.main_button = customtkinter.CTkButton(
+            self, text="Generate video", fg_color="transparent", border_width=2, text_color=("gray10", "#DCE4EE"), command=self.generate_video
+        )
+        self.main_button.grid(row=3, column=1, padx=(20, 20), pady=(20, 20), sticky="nsew")
+
+        # set default values
+        self.appearance_mode_optionmenu.set("System")
+        self.textbox.insert("0.0", "Insert the text here for TTS")
+        self.textbox.configure(text_color="grey", state="disabled")
+
+    def update_config_button(self):
+        if self.checkbox_1.get() == 1:
+            self.dialog_window.configure(state="disabled")
+            self.textbox.configure(state="normal", text_color="white")
+        else:
+            self.dialog_window.configure(state="normal")
+            self.textbox.configure(state="disabled", text_color="grey")
+
+    def open_input_dialog_event(self):
+        def convert_time_to_seconds(time_str):
+            hours, minutes = map(int, time_str.split(":"))
+            return hours * 60 + minutes
+
+        dialog = customtkinter.CTkInputDialog(text="Type the video timeline as in the example.\nExample: 01:23 - 03:45", title="Cutting video config")
+        dialog_input = dialog.get_input().strip().split("-")
+        self.start_time, self.end_time = [convert_time_to_seconds(time.strip()) for time in dialog_input]
+
+    def change_appearance_mode_event(self, new_appearance_mode: str):
+        customtkinter.set_appearance_mode(new_appearance_mode)
+
+    def generate_video(self):
+        video = VideoFileClip(f"gameplays/{self.optionmenu_1.get()}")
+
+        if self.checkbox_1.get() == 1:
+            gTTS(text=self.textbox.get("0.0", "end"), lang="en").save("output/tts.mp3")
+
+            audio_dur = AudioFileClip("output/tts.mp3").duration
+            video_dur = VideoFileClip(f"gameplays/{self.optionmenu_1.get()}").duration
+            if audio_dur > video_dur:
+                CTkMessagebox(title="Error", message="Error occured. The speech is too long. Video won't be generated", icon="cancel")
+            video = video.subclip(2, audio_dur + 3.3)
+        else:
+            video = video.subclip(self.start_time, self.end_time)
+
+        if self.checkbox_2.get() == 1:
+            video = self.change_resolution(video)
+
+        if self.checkbox_1.get() == 0:
+            video.write_videofile(filename="output/result.mp4", audio_codec="aac", remove_temp=True, fps=60, verbose=False, logger=None)
+        else:
+            video.write_videofile(
+                filename="output/result.mp4",
+                fps=60,
+                audio="output/tts.mp3" if self.checkbox_1.get() == 1 else True,
+                remove_temp=True,
+                verbose=False,
+                logger=None,
+            )
+
+        CTkMessagebox(title="Info", message="The video has been generated!")
+
+    def change_resolution(self, video: VideoFileClip) -> VideoFileClip:
+        original_width, original_height = video.size
+
+        new_width = original_height * 9 / 16
+        new_height = original_height
+
+        x_center = original_width / 2
+        x1 = x_center - new_width / 2
+        x2 = x_center + new_width / 2
+
+        return vfx.crop(video, x1=x1, y1=0, x2=x2, y2=new_height)
 
 
 if __name__ == "__main__":
-    main()
+    app = App()
+    app.mainloop()
