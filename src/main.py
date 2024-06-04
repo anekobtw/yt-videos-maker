@@ -50,8 +50,10 @@ class App(customtkinter.CTk):
         self.optionmenu_1.grid(row=0, column=0, pady=5, padx=(10, 0), sticky="nsew")
         self.checkbox_1 = customtkinter.CTkCheckBox(self.checkbox_frame, text="Generate speech", command=self.update_config_button)
         self.checkbox_1.grid(row=1, column=0, pady=5, padx=(10, 0), sticky="nsew")
-        self.checkbox_2 = customtkinter.CTkCheckBox(self.checkbox_frame, text="9:16")
-        self.checkbox_2.grid(row=2, column=0, pady=5, padx=(10, 0), sticky="nsew")
+        self.checkbox_3 = customtkinter.CTkCheckBox(self.checkbox_frame, text="9:16 (For YT Shorts)")
+        self.checkbox_3.grid(row=2, column=0, pady=5, padx=(10, 0), sticky="nsew")
+        self.entry1 = customtkinter.CTkEntry(self.checkbox_frame, placeholder_text="fps (default = 60)")
+        self.entry1.grid(row=3, column=0, pady=5, padx=(10, 0), sticky="nsew")
 
         # create entries
         self.cutting_frame = customtkinter.CTkFrame(self)
@@ -97,7 +99,7 @@ class App(customtkinter.CTk):
 
         if self.checkbox_1.get() == 1:
             language = "en" if self.language_option_menu.get() == "English" else "ru"
-            gTTS(text=self.textbox.get("0.0", "end"), lang=language).save("output/tts.mp3")
+            gTTS(text=self.textbox.get("0.0", "end"), slow=False, lang=language).save("output/tts.mp3")
 
             audio_dur = AudioFileClip("output/tts.mp3").duration
             video_dur = VideoFileClip(f"gameplays/{self.optionmenu_1.get()}").duration
@@ -107,15 +109,15 @@ class App(customtkinter.CTk):
         else:
             video = video.subclip(self.start_time, self.end_time)
 
-        if self.checkbox_2.get() == 1:
+        if self.checkbox_3.get() == 1:
             video = self.change_resolution(video)
 
         if self.checkbox_1.get() == 0:
-            video.write_videofile(filename="output/result.mp4", audio_codec="aac", remove_temp=True, fps=60, verbose=False, logger=None)
+            video.write_videofile(filename="output/result.mp4", audio_codec="aac", remove_temp=True, fps=int(self.entry1.get()) if self.entry1.get() else 60, verbose=False, logger=None)
         else:
             video.write_videofile(
                 filename="output/result.mp4",
-                fps=60,
+                fps=int(self.entry1.get()) if self.entry1.get() else 60,
                 audio="output/tts.mp3" if self.checkbox_1.get() == 1 else True,
                 remove_temp=True,
                 verbose=False,
