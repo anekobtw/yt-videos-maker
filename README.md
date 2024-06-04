@@ -9,7 +9,7 @@ Automatically create videos for youtube
 Clone the project
 
 ```
-$ git clone https://github.com/anekobtw/yt-videos-maker
+$ git clone https://github.com/anekobtw/yt-videos-maker.git
 ```
 
 Go to the project directory
