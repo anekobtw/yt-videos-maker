@@ -35,7 +35,7 @@ $ python main.py
 
 - [@anekobtw](https://www.github.com/anekobtw) 
  ### Built With
-- [colorama](https://github.com/tartley/colorama) - Simple cross-platform colored terminal text in Python 
+- [customtkinter](https://github.com/TomSchimansky/CustomTkinter) - A modern and customizable python UI-library based on Tkinter
 - [gTTS](https://github.com/pndurette/gTTS) - Python library and CLI tool to interface with Google Translate's text-to-speech API
 - [moviepy](https://github.com/Zulko/moviepy) - Video editing with Python
 - [CTkMessagebox](https://github.com/Akascape/CTkMessagebox) - A fully customizable messagebox for customtkinter!
